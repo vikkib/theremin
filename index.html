@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Web Theremin</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <meta name="description" content="An advanced web-based theremin simulator with audio effects, presets, and recording capabilities">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Advanced Web Theremin</h1>
+            <div class="header-controls">
+                <button id="show-tutorial" class="button" title="Show Tutorial (Space)">?</button>
+                <button id="record-button" class="button" title="Record Performance (Ctrl+R)">Record Performance</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="theremin-area">
+                <div id="position-indicator"></div>
+                <div class="display-panel">
+                    <div class="display-item">
+                        <span class="label">Frequency:</span>
+                        <span id="frequency-display">0 Hz</span>
+                    </div>
+                    <div class="display-item">
+                        <span class="label">Volume:</span>
+                        <span id="volume-display">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="panel-section">
+                    <h2>Sound Options</h2>
+                    <div class="control-group">
+                        <label for="waveform-select">Waveform:</label>
+                        <select id="waveform-select" title="Keyboard shortcuts: 1-4 for different waveforms">
+                            <option value="sine">Sine</option>
+                            <option value="square">Square</option>
+                            <option value="sawtooth">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="volume-sensitivity">Volume Sensitivity:</label>
+                        <input type="range" id="volume-sensitivity" min="10" max="200" value="100">
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2>Effects</h2>
+                    <div class="control-group">
+                        <div class="effect-toggle">
+                            <input type="checkbox" id="reverb-toggle" class="toggle-checkbox">
+                            <label for="reverb-toggle" class="toggle-label"></label>
+                            <span>Reverb</span>
+                        </div>
+                        <input type="range" id="reverb-amount" min="0" max="100" value="30">
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="effect-toggle">
+                            <input type="checkbox" id="tremolo-toggle" class="toggle-checkbox">
+                            <label for="tremolo-toggle" class="toggle-label"></label>
+                            <span>Tremolo</span>
+                        </div>
+                        <div class="sub-controls">
+                            <div class="sub-control">
+                                <label for="tremolo-speed">Speed:</label>
+                                <input type="range" id="tremolo-speed" min="1" max="20" value="5">
+                            </div>
+                            <div class="sub-control">
+                                <label for="tremolo-depth">Depth:</label>
+                                <input type="range" id="tremolo-depth" min="1" max="100" value="50">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="effect-toggle">
+                            <input type="checkbox" id="distortion-toggle" class="toggle-checkbox">
+                            <label for="distortion-toggle" class="toggle-label"></label>
+                            <span>Distortion</span>
+                        </div>
+                        <input type="range" id="distortion-amount" min="0" max="100" value="10">
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2>Presets</h2>
+                    <div class="control-group">
+                        <label for="preset-select">Load Preset:</label>
+                        <select id="preset-select">
+                            <option value="default">Default</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button id="save-preset" class="button" title="Save Current Settings (Ctrl+S)">Save Preset</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2>Recording</h2>
+                    <div class="control-group recording-controls">
+                        <button id="play-recording" class="button" disabled>Play Recording</button>
+                        <button id="download-recording" class="button" disabled>Download</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="welcome-screen" class="overlay">
+            <div class="welcome-content">
+                <img src="assets/theremin_logo.png" alt="Theremin Logo" class="welcome-logo">
+                <h2>Welcome to the Theremin Simulator</h2>
+                <p>Experience the unique sound of a theremin right in your browser!</p>
+                <p>Click or touch to control pitch and volume without physical contact.</p>
+                <button id="start-button" class="button">Start Playing</button>
+            </div>
+        </div>
+        
+        <div id="tutorial-overlay" class="overlay hidden">
+            <div class="tutorial-content">
+                <h2>How to Play the Theremin</h2>
+                <div class="tutorial-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Start Playing</h3>
+                        <p>Click or touch the theremin area to start producing sound.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Control Pitch</h3>
+                        <p>Move your cursor or finger up and down to change the pitch.</p>
+                        <p>Higher position = higher pitch</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Control Volume</h3>
+                        <p>Move your cursor or finger left and right to change the volume.</p>
+                        <p>Right position = louder</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Customize Sound</h3>
+                        <p>Use the control panel to change waveform and add effects.</p>
+                    </div>
+                </div>
+                <button id="close-tutorial" class="button">Got it!</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="theremin.js"></script>
+    <!-- Production version (minified files) can be used by uncommenting the following lines -->
+    <!-- 
+    <script src="dist/theremin.min.js"></script>
+    <link rel="stylesheet" href="dist/styles.min.css">
+    -->
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio API Theremin Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #theremin-area {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        
+        #info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            color: white;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        #frequency-display, #volume-display {
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        #instructions {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="theremin-area">
+        <h1>Web Audio API Theremin</h1>
+        <p>Move your mouse or finger to play</p>
+        <div id="frequency-display">Frequency: 0 Hz</div>
+        <div id="volume-display">Volume: 0</div>
+        
+        <div id="instructions">
+            <p><strong>How to play:</strong></p>
+            <p>Move your mouse <strong>up and down</strong> to control pitch</p>
+            <p>Move your mouse <strong>left and right</strong> to control volume</p>
+            <p>Move your mouse <strong>out of this area</strong> to stop sound</p>
+        </div>
+    </div>
+    
+    <div id="info-panel">
+        <p>Based on theremin principles: A theremin is played without physical contact by moving hands near antennas to control pitch and volume</p>
+    </div>
+
+    <script>
+        // Initialize the audio context
+        let audioContext;
+        let oscillator;
+        let gainNode;
+        let isPlaying = false;
+
+        // Frequency range (in Hz)
+        const MIN_FREQUENCY = 65;   // Approximate lower bound of theremin range
+        const MAX_FREQUENCY = 3000; // Approximate upper bound of theremin range
+
+        // Volume range
+        const MIN_VOLUME = 0;
+        const MAX_VOLUME = 1;
+
+        // Initialize the theremin
+        function initTheremin() {
+            // Create audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create oscillator
+            oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine'; // Sine wave is closest to theremin's pure tone
+            oscillator.frequency.value = 440; // Default to A4
+            
+            // Create gain node for volume control
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = 0; // Start with no sound
+            
+            // Connect the nodes
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Start the oscillator
+            oscillator.start();
+            isPlaying = true;
+            
+            console.log("Theremin initialized");
+        }
+
+        // Update theremin parameters based on mouse position
+        function updateTheremin(event) {
+            if (!isPlaying) return;
+            
+            // Map vertical mouse position (Y-axis) to frequency
+            // Invert Y-axis so higher position = higher pitch
+            const height = window.innerHeight;
+            const normalizedY = 1 - (event.clientY / height);
+            const frequency = MIN_FREQUENCY + normalizedY * (MAX_FREQUENCY - MIN_FREQUENCY);
+            
+            // Map horizontal mouse position (X-axis) to volume
+            const width = window.innerWidth;
+            const normalizedX = event.clientX / width;
+            const volume = MIN_VOLUME + normalizedX * (MAX_VOLUME - MIN_VOLUME);
+            
+            // Apply the values with smoothing for more theremin-like effect
+            oscillator.frequency.setTargetAtTime(frequency, audioContext.currentTime, 0.01);
+            gainNode.gain.setTargetAtTime(volume, audioContext.currentTime, 0.01);
+            
+            // Update UI to show current frequency and volume
+            updateUI(frequency, volume);
+        }
+
+        // Stop the theremin
+        function stopTheremin() {
+            if (!isPlaying) return;
+            
+            // Fade out to avoid clicks
+            gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.02);
+            
+            // Stop the oscillator after fade out
+            setTimeout(() => {
+                oscillator.stop();
+                isPlaying = false;
+                console.log("Theremin stopped");
+                
+                // Reset UI
+                document.getElementById('frequency-display').textContent = 'Frequency: 0 Hz';
+                document.getElementById('volume-display').textContent = 'Volume: 0';
+            }, 100);
+        }
+
+        // Update UI with current values
+        function updateUI(frequency, volume) {
+            document.getElementById('frequency-display').textContent = `Frequency: ${frequency.toFixed(0)} Hz`;
+            document.getElementById('volume-display').textContent = `Volume: ${volume.toFixed(2)}`;
+        }
+
+        // Set up event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const thereminArea = document.getElementById('theremin-area');
+            
+            // Start theremin when mouse enters the area
+            thereminArea.addEventListener('mouseenter', () => {
+                if (!isPlaying) {
+                    initTheremin();
+                }
+            });
+            
+            // Update theremin parameters as mouse moves
+            thereminArea.addEventListener('mousemove', updateTheremin);
+            
+            // Stop theremin when mouse leaves the area
+            thereminArea.addEventListener('mouseleave', stopTheremin);
+            
+            // Touch support for mobile devices
+            thereminArea.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!isPlaying) {
+                    initTheremin();
+                }
+                updateThereminTouch(e);
+            });
+            
+            thereminArea.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                updateThereminTouch(e);
+            });
+            
+            thereminArea.addEventListener('touchend', () => {
+                stopTheremin();
+            });
+        });
+
+        // Handle touch events
+        function updateThereminTouch(event) {
+            if (!isPlaying || !event.touches[0]) return;
+            
+            // Create a synthetic mouse event from touch
+            const touch = event.touches[0];
+            updateTheremin({
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+        }
+    </script>
+</body>
+</html>
